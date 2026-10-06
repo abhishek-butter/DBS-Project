@@ -43,7 +43,7 @@ const seedData = async () => {
 
   console.log('Generating students...');
   const students = [];
-  for(let i=1; i<=150; i++) {
+  for(let i=1; i<=1000; i++) {
       students.push({
           regNo: '24BCE' + i.toString().padStart(4, '0'),
           name: generateName(),
