@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import Sidebar from './components/Sidebar';
 import Students from './pages/Students';
 import Attendance from './pages/Attendance';
+import Analytics from './pages/Analytics';
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token') || '');
@@ -15,13 +16,14 @@ function App() {
 
   return (
     <Router>
-      <div className="flex h-screen bg-gray-100">
+      <div className="flex h-screen bg-slate-50 overflow-hidden">
         <Sidebar setToken={setToken} />
-        <div className="flex-1 overflow-auto p-8">
+        <div className="flex-1 overflow-auto p-6 md:p-8">
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/students" element={<Students />} />
             <Route path="/attendance" element={<Attendance />} />
+            <Route path="/analytics" element={<Analytics />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </div>
@@ -29,4 +31,5 @@ function App() {
     </Router>
   );
 }
+
 export default App;

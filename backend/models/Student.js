@@ -8,5 +8,5 @@ const StudentSchema = new mongoose.Schema({
   section: { type: String, required: true },
   semester: { type: Number, required: true },
 });
-StudentSchema.index({ regNo: 1 }, { unique: true });
+StudentSchema.index({ department: 1, section: 1 });
 module.exports = mongoose.model('Student', StudentSchema);

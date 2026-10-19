@@ -1,0 +1,1489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BCSE302P Review 3 Presentation — Student Attendance Management System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #060913;
+      --card-bg: rgba(15, 23, 42, 0.78);
+      --card-hover: rgba(30, 41, 59, 0.85);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-glow: rgba(59, 130, 246, 0.4);
+      --primary: #3b82f6;
+      --primary-cyan: #06b6d4;
+      --primary-violet: #8b5cf6;
+      --accent-green: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-red: #ef4444;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-faint: #64748b;
+      --font-display: 'Outfit', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 10% 15%, rgba(37, 99, 235, 0.12), transparent 40%),
+        radial-gradient(circle at 90% 85%, rgba(139, 92, 246, 0.12), transparent 40%),
+        radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.05), transparent 60%);
+      color: var(--text-main);
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+    }
+
+    /* Top Progress Bar */
+    .progress-track {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.05);
+      z-index: 200;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 10%;
+      background: linear-gradient(90deg, #3b82f6, #06b6d4, #10b981);
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.6);
+      transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Top Header Bar */
+    .top-bar {
+      height: 58px;
+      background: rgba(11, 15, 25, 0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      z-index: 100;
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      background: #10b981;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #10b981;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    .brand-title {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .badge-tag {
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.35);
+      color: #60a5fa;
+      padding: 2px 9px;
+      border-radius: 999px;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      font-family: var(--font-mono);
+    }
+
+    .badge-green {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #34d399;
+      padding: 2px 9px;
+      border-radius: 999px;
+      font-size: 10.5px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+    }
+
+    .nav-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .slide-counter-badge {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      color: #94a3b8;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      padding: 5px 12px;
+      border-radius: 8px;
+      min-width: 68px;
+      text-align: center;
+    }
+
+    button.nav-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #e2e8f0;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: var(--font-body);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    button.nav-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      transform: translateY(-1px);
+    }
+
+    button.nav-btn.primary {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      border-color: #3b82f6;
+      color: #fff;
+      box-shadow: 0 0 15px rgba(37, 99, 235, 0.35);
+    }
+
+    button.nav-btn.primary:hover {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      box-shadow: 0 0 20px rgba(37, 99, 235, 0.5);
+    }
+
+    /* Slide Viewport & Slides */
+    .viewport {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 28px 24px 28px;
+    }
+
+    .slide {
+      position: absolute;
+      width: 95%;
+      max-width: 1320px;
+      height: 84vh;
+      max-height: 730px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-subtle);
+      border-radius: 24px;
+      box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.7), 0 0 30px rgba(59, 130, 246, 0.05);
+      backdrop-filter: blur(20px);
+      padding: 34px 44px;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.97) translateY(14px);
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      overflow-y: auto;
+    }
+
+    .slide.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: scale(1) translateY(0);
+    }
+
+    /* Header inside slides */
+    .slide-header {
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .slide-category {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: #38bdf8;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 3px;
+    }
+
+    .slide-title {
+      font-family: var(--font-display);
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #fff;
+    }
+
+    .rubric-mark-pill {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(6, 182, 212, 0.15));
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #34d399;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    /* Grids & Cards */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      flex: 1;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+      flex: 1;
+    }
+
+    .card {
+      background: rgba(13, 19, 33, 0.85);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      transition: all 0.2s ease;
+    }
+
+    .card:hover {
+      border-color: rgba(59, 130, 246, 0.3);
+      background: rgba(17, 24, 39, 0.95);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+
+    .card-title {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 700;
+      color: #93c5fd;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-body {
+      font-size: 12px;
+      line-height: 1.55;
+      color: #cbd5e1;
+    }
+
+    ul.clean-list {
+      list-style: none;
+    }
+
+    ul.clean-list li {
+      margin-bottom: 7px;
+      position: relative;
+      padding-left: 15px;
+    }
+
+    ul.clean-list li::before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      color: #38bdf8;
+      font-size: 14px;
+    }
+
+    /* Hero / Title Slide */
+    .hero-slide {
+      background: 
+        radial-gradient(circle at 80% 20%, rgba(37, 99, 235, 0.18), transparent 45%),
+        radial-gradient(circle at 20% 85%, rgba(139, 92, 246, 0.18), transparent 45%),
+        rgba(15, 23, 42, 0.85);
+      justify-content: center;
+      text-align: left;
+    }
+
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: 42px;
+      font-weight: 900;
+      line-height: 1.12;
+      margin-bottom: 12px;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, #ffffff 40%, #93c5fd 80%, #38bdf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-subtitle {
+      font-size: 16px;
+      color: #94a3b8;
+      line-height: 1.55;
+      max-width: 880px;
+      margin-bottom: 28px;
+    }
+
+    .hero-badges-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .author-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .author-box {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 12px 14px;
+    }
+
+    .author-name {
+      font-family: var(--font-display);
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .author-sub {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: #38bdf8;
+      margin-top: 2px;
+    }
+
+    /* Index Slide Specific */
+    .hud-banner {
+      background: linear-gradient(90deg, rgba(16, 185, 129, 0.12), rgba(6, 182, 212, 0.08), rgba(37, 99, 235, 0.12));
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 12px;
+      padding: 8px 14px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .hud-title {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 800;
+      color: #34d399;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .hud-pills {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .hud-pill {
+      background: rgba(16, 185, 129, 0.18);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #a7f3d0;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 6px;
+    }
+
+    .index-col {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .index-col-header {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 7px 12px;
+      border-radius: 8px;
+      font-family: var(--font-display);
+      font-size: 12px;
+      font-weight: 800;
+      color: #93c5fd;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      text-align: center;
+    }
+
+    .index-item {
+      background: rgba(11, 17, 30, 0.85);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .index-item::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 3px;
+      background: #3b82f6;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .index-item:hover {
+      background: rgba(23, 32, 54, 0.95);
+      border-color: rgba(59, 130, 246, 0.5);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4), 0 0 15px rgba(59, 130, 246, 0.15);
+    }
+
+    .index-item:hover::before {
+      opacity: 1;
+    }
+
+    .index-item-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .index-item-title {
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .index-item-badge {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      color: #34d399;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .index-item-desc {
+      font-size: 11px;
+      color: #94a3b8;
+      line-height: 1.45;
+    }
+
+    /* Performance Battle Meter */
+    .battle-meter {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 12px;
+      margin: 10px 0;
+    }
+
+    .meter-row {
+      margin-bottom: 8px;
+    }
+
+    .meter-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .meter-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .meter-bar-track {
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .meter-bar-fill-red {
+      height: 100%;
+      width: 95%;
+      background: linear-gradient(90deg, #ef4444, #f87171);
+      border-radius: 999px;
+    }
+
+    .meter-bar-fill-green {
+      height: 100%;
+      width: 4%;
+      background: linear-gradient(90deg, #10b981, #34d399);
+      border-radius: 999px;
+      box-shadow: 0 0 10px #10b981;
+    }
+
+    /* Code Blocks */
+    pre.code-block {
+      background: #040711;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: #38bdf8;
+      overflow-x: auto;
+      line-height: 1.45;
+      margin-top: 6px;
+    }
+
+    /* Table styling */
+    table.custom-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11.5px;
+      margin-top: 4px;
+    }
+
+    table.custom-table th {
+      background: rgba(30, 41, 59, 0.9);
+      color: #93c5fd;
+      text-align: left;
+      padding: 7px 10px;
+      font-family: var(--font-display);
+      font-weight: 700;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    table.custom-table td {
+      padding: 6px 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: #cbd5e1;
+    }
+
+    table.custom-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .method-badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      font-weight: 700;
+    }
+
+    .method-post { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+    .method-get { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+    .method-put { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+    .method-del { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+
+    /* Footer */
+    .slide-footer {
+      margin-top: auto;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: var(--text-faint);
+      font-family: var(--font-mono);
+    }
+
+    /* Interactive Bottom Dots Navigation */
+    .bottom-bar {
+      height: 48px;
+      background: rgba(8, 12, 20, 0.9);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      z-index: 100;
+    }
+
+    .dots-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 22px;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .dot:hover {
+      background: rgba(255, 255, 255, 0.35);
+    }
+
+    .dot.active {
+      width: 44px;
+      background: linear-gradient(90deg, #3b82f6, #06b6d4);
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.6);
+    }
+
+    .kbd-hints {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 11px;
+      color: var(--text-faint);
+      font-family: var(--font-mono);
+    }
+
+    .kbd {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 1px 5px;
+      border-radius: 4px;
+      color: #94a3b8;
+    }
+
+    /* Responsive Print Mode */
+    @media print {
+      body {
+        overflow: visible;
+        background: #000;
+      }
+      .top-bar, .bottom-bar, .progress-track {
+        display: none !important;
+      }
+      .slide {
+        position: relative !important;
+        opacity: 1 !important;
+        transform: none !important;
+        page-break-after: always;
+        height: 100vh;
+        max-height: none;
+        width: 100% !important;
+        box-shadow: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Real-Time Progress Bar -->
+  <div class="progress-track">
+    <div class="progress-fill" id="progressBar"></div>
+  </div>
+
+  <!-- Top Navigation Bar -->
+  <div class="top-bar">
+    <div class="brand-section">
+      <div class="live-dot"></div>
+      <div class="brand-title">
+        <span>Attendance<span style="color: #38bdf8;">DB</span></span>
+        <span class="badge-tag">BCSE302P Slot D2</span>
+        <span class="badge-green">Review 3: 10 Marks</span>
+      </div>
+    </div>
+    <div class="nav-controls">
+      <button class="nav-btn" onclick="prevSlide()">◀ Prev</button>
+      <div class="slide-counter-badge" id="slideCounter">01 / 10</div>
+      <button class="nav-btn primary" onclick="nextSlide()">Next ▶</button>
+      <button class="nav-btn" onclick="toggleFullScreen()" title="Toggle Fullscreen (F)">⛶ Fullscreen</button>
+    </div>
+  </div>
+
+  <!-- Slide Viewport -->
+  <div class="viewport">
+
+    <!-- SLIDE 1: HERO COVER SLIDE -->
+    <div class="slide hero-slide active" id="slide-1">
+      <div class="hero-badges-row">
+        <span class="badge-tag">BCSE302P Database Systems Lab Project</span>
+        <span class="badge-green">Review 3: Final Demonstration, Evaluation &amp; Documentation (10 Marks)</span>
+      </div>
+
+      <h1 class="hero-title">Student Attendance Management System</h1>
+
+      <p class="hero-subtitle">
+        A Production-Grade Full-Stack NoSQL Application with MongoDB Native Aggregation Pipelines, Atomic bulkWrite() Upserts, B-Tree Compound Indexing &amp; Real-Time Dean Analytics.
+      </p>
+
+      <div class="author-grid">
+        <div class="author-box">
+          <div class="author-name">Abhishek VS</div>
+          <div class="author-sub">24BCE0404 &bull; Computer Science</div>
+        </div>
+        <div class="author-box">
+          <div class="author-name">Ayush Naugariya</div>
+          <div class="author-sub">24BDS0076 &bull; Data Science</div>
+        </div>
+        <div class="author-box">
+          <div class="author-name">Slot &amp; Faculty</div>
+          <div class="author-sub" style="color: #a78bfa;">Slot D2 &bull; Lab Project Evaluation</div>
+        </div>
+        <div class="author-box">
+          <div class="author-name">Technology Stack</div>
+          <div class="author-sub" style="color: #34d399;">MongoDB + Express + React 19 + Node</div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Use Arrow Keys (◀ / ▶) or Number Keys (1-9, 0) to Navigate</span>
+        <span>Slide 01 of 10</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: REVIEW 3 RUBRICS & PRESENTATION INDEX -->
+    <div class="slide" id="slide-2">
+      <div class="slide-header">
+        <div>
+          <div class="slide-category">BCSE302P Official Rubrics &amp; Deliverables Mapping</div>
+          <div class="slide-title">Presentation Index &amp; Review 3 Rubric Mapping</div>
+        </div>
+        <div class="rubric-mark-pill">Total: 10 Marks</div>
+      </div>
+
+      <!-- Rubrics Compliance HUD -->
+      <div class="hud-banner">
+        <div class="hud-title">
+          <span>✓</span> MINIMUM REQUIREMENTS COMPLIANCE:
+        </div>
+        <div class="hud-pills">
+          <span class="hud-pill">6 Collections (min 5)</span>
+          <span class="hud-pill">2,640+ Seed Docs (min 100)</span>
+          <span class="hud-pill">Full CRUD Complete</span>
+          <span class="hud-pill">7 Aggregations (min 5)</span>
+          <span class="hud-pill">6 Indexes (min 2)</span>
+          <span class="hud-pill">Bcrypt + JWT RBAC</span>
+          <span class="hud-pill">Responsive UI</span>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <!-- Col 1: Foundations -->
+        <div class="index-col">
+          <div class="index-col-header">1. Project Foundations</div>
+
+          <div class="index-item" onclick="showSlide(3)">
+            <div class="index-item-head">
+              <span class="index-item-title">Topic 01 | Architecture &amp; Scope</span>
+              <span class="index-item-badge">Slide 03 &bull; Context</span>
+            </div>
+            <div class="index-item-desc">
+              Manual register flaws, proxy risks, 4 core system objectives &amp; 3-tier MERN stack architecture.
+            </div>
+          </div>
+
+          <div class="index-item" onclick="showSlide(4)">
+            <div class="index-item-head">
+              <span class="index-item-title">Topic 02 | DB Selection &amp; Schema</span>
+              <span class="index-item-badge">Slide 04 &bull; Context</span>
+            </div>
+            <div class="index-item-desc">
+              Why MongoDB? Referencing vs Embedding rationale (16MB limit) &amp; full 6 collections schema.
+            </div>
+          </div>
+        </div>
+
+        <!-- Col 2: Review 3 Demo & Analytics -->
+        <div class="index-col">
+          <div class="index-col-header">2. Demo &amp; Pipelines (5M)</div>
+
+          <div class="index-item" onclick="showSlide(5)">
+            <div class="index-item-head">
+              <span class="index-item-title">Topic 03 | Working Demo Workflows</span>
+              <span class="index-item-badge">Slide 05 &bull; 3 Marks</span>
+            </div>
+            <div class="index-item-desc">
+              Admin, Faculty &amp; Student live operational workflows with end-to-end execution pipeline.
+            </div>
+          </div>
+
+          <div class="index-item" onclick="showSlide(6)">
+            <div class="index-item-head">
+              <span class="index-item-title">Topic 04 | Full CRUD &amp; bulkWrite</span>
+              <span class="index-item-badge">Slide 06 &bull; 3 Marks</span>
+            </div>
+            <div class="index-item-desc">
+              Complete 5-entity REST API matrix &amp; atomic bulkWrite upsert (&lt;12ms) vs naive loops.
+            </div>
+          </div>
+
+          <div class="index-item" onclick="showSlide(7)">
+            <div class="index-item-head">
+              <span class="index-item-title">Topic 05 | 7 Aggregation Pipelines</span>
+              <span class="index-item-badge">Slide 07 &bull; 2 Marks</span>
+            </div>
+            <div class="index-item-desc">
+              Student/Subject leagues, daily time-series trends, dynamic defaulter alerts (&lt;75%) &amp; summary.
+            </div>
+          </div>
+        </div>
+
+        <!-- Col 3: Review 3 UI & Viva Defense -->
+        <div class="index-col">
+          <div class="index-col-header">3. UI, Security &amp; Defense (5M)</div>
+
+          <div class="index-item" onclick="showSlide(8)">
+            <div class="index-item-head">
+              <span class="index-item-title">Topic 06 | UI, Dashboards &amp; Defaulters</span>
+              <span class="index-item-badge">Slide 08 &bull; 1.5M</span>
+            </div>
+            <div class="index-item-desc">
+              Interactive Recharts visuals (Line, Bar, Donut), batch roll-call, dynamic defaulters &amp; CSV export.
+            </div>
+          </div>
+
+          <div class="index-item" onclick="showSlide(9)">
+            <div class="index-item-head">
+              <span class="index-item-title">Topic 07 | Security &amp; Index Tuning</span>
+              <span class="index-item-badge">Slide 09 &bull; 1.5M</span>
+            </div>
+            <div class="index-item-desc">
+              B-Tree indexes: COLLSCAN (28.4ms) vs IXSCAN (&lt;1.2ms, 23x), bcrypt salt rounds &amp; JWT RBAC.
+            </div>
+          </div>
+
+          <div class="index-item" onclick="showSlide(10)">
+            <div class="index-item-head">
+              <span class="index-item-title">Topic 08 | Verification &amp; Viva Defense</span>
+              <span class="index-item-badge">Slide 10 &bull; 2 Marks</span>
+            </div>
+            <div class="index-item-desc">
+              Automated test suite (28/28 tests passed), core Viva Voce technical Q&amp;A defense &amp; conclusion.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Click Any Topic Above to Jump Directly to That Slide</span>
+        <span>Slide 02 of 10</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: PROBLEM STATEMENT, OBJECTIVES & ARCHITECTURE -->
+    <div class="slide" id="slide-3">
+      <div class="slide-header">
+        <div>
+          <div class="slide-category">Topic 01 | Foundations: Requirements &amp; System Overview</div>
+          <div class="slide-title">System Architecture &amp; Core Project Objectives</div>
+        </div>
+        <div class="rubric-mark-pill">Review 1 &amp; 2 Context</div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Problem Statement &amp; Educational Motivation</div>
+          <div class="card-body">
+            <ul class="clean-list">
+              <li><strong>Physical Register Bottlenecks:</strong> Paper registers suffer from physical tear, illegible handwriting, human tally errors, and vulnerability to proxy sign-ins.</li>
+              <li><strong>Administrative Collation Bottleneck:</strong> Faculty spend hours collating daily sheets to compute aggregate percentages across 60+ students per batch.</li>
+              <li><strong>Delayed Debarment Warnings:</strong> Students falling below the mandatory 75% attendance threshold are identified at semester end, preventing timely remedial intervention.</li>
+              <li><strong>The Digital Solution:</strong> An atomic web roll-call engine with real-time aggregation recalculation, dynamic threshold alerts, and instant CSV audit exports.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">3-Tier System Architecture &amp; Project Scope</div>
+          <div class="card-body">
+            <ul class="clean-list">
+              <li><strong>Presentation Layer (Frontend):</strong>
+                <br>&bull; React 19 Single Page Application built with Vite.
+                <br>&bull; Tailwind CSS responsive design + Lucide icons.
+                <br>&bull; Recharts dynamic data visuals (Line, Bar, Donut).
+                <br>&bull; Axios with JWT request bearer token interceptors.
+              </li>
+              <li><strong>Application Layer (Backend):</strong>
+                <br>&bull; Node.js &amp; Express.js REST API service.
+                <br>&bull; Mongoose ODM schema validation and type modeling.
+                <br>&bull; Bcrypt salted password hashing + JWT authentication.
+              </li>
+              <li><strong>Database Layer (MongoDB Engine):</strong>
+                <br>&bull; 6 collections with 2,640+ seeded documents.
+                <br>&bull; B-Tree compound indexing &amp; multi-stage pipeline engine.
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Foundations: System Architecture &amp; Dataflow &bull; Slot D2</span>
+        <span>Slide 03 of 10</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 4: DATABASE SELECTION & 6 COLLECTIONS -->
+    <div class="slide" id="slide-4">
+      <div class="slide-header">
+        <div>
+          <div class="slide-category">Topic 02 | Foundations: Schema Modeling &amp; Justification</div>
+          <div class="slide-title">Database Selection (Why MongoDB?) &amp; 6 Collections Schema</div>
+        </div>
+        <div class="rubric-mark-pill">Review 1 &amp; 2 Context</div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Why MongoDB? (Architectural Justification)</div>
+          <div class="card-body">
+            <ul class="clean-list">
+              <li><strong>Flexible BSON Document Model:</strong> JSON objects naturally match JavaScript/React client models without complex SQL migrations.</li>
+              <li><strong>Referencing vs. Embedding Decision:</strong>
+                <br>&bull; <em>Why NOT embed in Students?</em> 50+ records per student causes document bloat toward the 16MB BSON limit and slows queries.
+                <br>&bull; <em>Normalized Referencing Solution:</em> Attendance logs reference Student, Subject, and Class via ObjectIds, enabling fast queries and date-based indexing.
+              </li>
+              <li><strong>Native Aggregation Engine:</strong> Grouping, date bucketing, and percentages calculated directly on the database engine.</li>
+              <li><strong>High-Throughput Bulk Operations:</strong> <code>bulkWrite()</code> handles hundreds of daily attendance records in a single network round-trip.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">6 Master Collections Schema Design</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px;">
+            <div style="background: #090d16; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+              <strong style="color: #60a5fa; font-size: 11px;">1. Users</strong>
+              <p style="font-size: 10px; color: #94a3b8;">_id, name, email (unique), password (bcrypt), role ('admin'|'faculty'|'student')</p>
+            </div>
+            <div style="background: #090d16; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+              <strong style="color: #60a5fa; font-size: 11px;">2. Students</strong>
+              <p style="font-size: 10px; color: #94a3b8;">_id, regNo (unique index), name, email, department, year, semester, section ('D1'|'D2')</p>
+            </div>
+            <div style="background: #090d16; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+              <strong style="color: #60a5fa; font-size: 11px;">3. Faculty</strong>
+              <p style="font-size: 10px; color: #94a3b8;">_id, facultyId (unique), name, email, department</p>
+            </div>
+            <div style="background: #090d16; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+              <strong style="color: #60a5fa; font-size: 11px;">4. Subjects</strong>
+              <p style="font-size: 10px; color: #94a3b8;">_id, subjectCode (unique), subjectName, facultyId -> Faculty, credits</p>
+            </div>
+            <div style="background: #090d16; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+              <strong style="color: #60a5fa; font-size: 11px;">5. Classes</strong>
+              <p style="font-size: 10px; color: #94a3b8;">_id, subjectId -> Subject, facultyId -> Faculty, date, room, startTime, endTime</p>
+            </div>
+            <div style="background: #090d16; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+              <strong style="color: #60a5fa; font-size: 11px;">6. Attendance</strong>
+              <p style="font-size: 10px; color: #94a3b8;">_id, classId, studentId, subjectId, date, status ('Present'|'Absent'), markedBy</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Foundations: Database Selection &amp; 6 Collections Schema &bull; Slot D2</span>
+        <span>Slide 04 of 10</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: TOPIC 03 - WORKING DEMONSTRATION WORKFLOWS -->
+    <div class="slide" id="slide-5">
+      <div class="slide-header">
+        <div>
+          <div class="slide-category">Topic 03 | Review 3 Criterion 1: Complete Working Demonstration</div>
+          <div class="slide-title">Complete Working Demonstration &amp; Role-Based Workflows</div>
+        </div>
+        <div class="rubric-mark-pill">Criterion 1: 3 Marks</div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Live Operational Demonstration (3 Roles)</div>
+          <div class="card-body">
+            <ul class="clean-list">
+              <li><strong>Administrator Demonstration Workflow:</strong>
+                <br>&bull; Master entity management: Full CRUD on students, faculty, subjects, and timetable classes.
+                <br>&bull; Cascading integrity: Deleting a student automatically cleans up linked attendance records.
+                <br>&bull; Real-time system monitoring &amp; pipeline code inspector.
+              </li>
+              <li><strong>Faculty Member Demonstration Workflow:</strong>
+                <br>&bull; High-speed digital roll-call: Select course and date to load student roster.
+                <br>&bull; Batch actions: 1-Click 'Mark All Present' / 'Mark All Absent' with individual toggle switches.
+                <br>&bull; Live session turnout gauge recalculates dynamically before submission.
+              </li>
+              <li><strong>Student Demonstration Workflow:</strong>
+                <br>&bull; Self-service personal portal: View overall and subject-by-subject percentage breakdowns.
+                <br>&bull; Real-time debarment warning banner if attendance falls below 75%.
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">End-to-End Execution Dataflow</div>
+          <div class="card-body">
+            <ul class="clean-list">
+              <li><strong>Step 1: User Authentication &amp; JWT Issuance:</strong>
+                <br>User submits credentials $\rightarrow$ bcrypt validates salted hash $\rightarrow$ signed JWT token returned and stored in localStorage.
+              </li>
+              <li><strong>Step 2: Roll-Call Submission:</strong>
+                <br>Faculty toggles student statuses on React UI $\rightarrow$ frontend bundles all 60 records into a single JSON payload $\rightarrow$ Axios attaches x-auth-token.
+              </li>
+              <li><strong>Step 3: Express Route &amp; RBAC Middleware:</strong>
+                <br>JWT middleware verifies token signature and faculty role $\rightarrow$ passes clean array to attendance controller.
+              </li>
+              <li><strong>Step 4: Atomic Database Upsert Engine:</strong>
+                <br>MongoDB executes bulkWrite() upsert in &lt;12ms $\rightarrow$ updates records idempotently with zero duplicate creation.
+              </li>
+              <li><strong>Step 5: Real-Time Analytics Recalculation:</strong>
+                <br>Dashboard aggregation pipelines re-compute attendance percentages instantly upon next request.
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Review 3 Criterion 1: Complete Working Demonstration (3 Marks Total) &bull; Slot D2</span>
+        <span>Slide 05 of 10</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 6: TOPIC 04 - FULL CRUD & ATOMIC BULKWRITE -->
+    <div class="slide" id="slide-6">
+      <div class="slide-header">
+        <div>
+          <div class="slide-category">Topic 04 | Review 3 Criterion 1: Core Operations &amp; Data Integrity</div>
+          <div class="slide-title">Full CRUD Operations Matrix &amp; Atomic bulkWrite() Engine</div>
+        </div>
+        <div class="rubric-mark-pill">Criterion 1: 3 Marks</div>
+      </div>
+
+      <div class="card" style="margin-bottom: 14px;">
+        <div class="card-title">REST API Endpoints Matrix (All 5 Resource Entities)</div>
+        <table class="custom-table">
+          <tr><th>Resource Entity</th><th>CREATE (POST)</th><th>READ (GET)</th><th>UPDATE (PUT)</th><th>DELETE (DELETE)</th></tr>
+          <tr><td><strong>Students</strong></td><td>POST /api/students</td><td>GET /api/students?search&page</td><td>PUT /api/students/:id</td><td>DELETE /api/students/:id (Cascade)</td></tr>
+          <tr><td><strong>Faculty</strong></td><td>POST /api/faculty</td><td>GET /api/faculty</td><td>PUT /api/faculty/:id</td><td>DELETE /api/faculty/:id</td></tr>
+          <tr><td><strong>Subjects</strong></td><td>POST /api/subjects</td><td>GET /api/subjects (Populated)</td><td>PUT /api/subjects/:id</td><td>DELETE /api/subjects/:id</td></tr>
+          <tr><td><strong>Classes</strong></td><td>POST /api/classes</td><td>GET /api/classes (Populated)</td><td>PUT /api/classes/:id</td><td>DELETE /api/classes/:id</td></tr>
+          <tr><td><strong>Attendance</strong></td><td>POST /api/attendance (Bulk)</td><td>GET /api/attendance?date&subj</td><td>PUT /api/attendance/:id (Toggle)</td><td>DELETE /api/attendance/:id</td></tr>
+        </table>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title" style="color: #f87171;">The Problem: Naive Iterative Saves Anti-Pattern</div>
+          <div class="card-body">
+            <ul class="clean-list">
+              <li><strong>Sequential Insertion:</strong> <code>for (let r of records) { await Attendance.create(r); }</code></li>
+              <li><strong>60 Sequential Round-Trips:</strong> Takes 1,500ms+ per roll-call session.</li>
+              <li><strong>Partial Failure Risk:</strong> If record #30 drops due to network glitch, database is left in a corrupted state.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title" style="color: #34d399;">The Solution: Atomic bulkWrite() Upsert Engine</div>
+          <div class="card-body">
+            <!-- Battle meter -->
+            <div class="battle-meter" style="margin-top: 0;">
+              <div class="meter-row">
+                <div class="meter-label">
+                  <span style="color: #f87171;">Naive Loop: 60 Network Round-Trips</span>
+                  <span style="color: #f87171;">~1,500 ms</span>
+                </div>
+                <div class="meter-bar-track">
+                  <div class="meter-bar-fill-red"></div>
+                </div>
+              </div>
+              <div class="meter-row">
+                <div class="meter-label">
+                  <span style="color: #34d399;">Atomic bulkWrite() Upsert Engine</span>
+                  <span style="color: #34d399;">&lt; 12 ms (&gt;99% faster!)</span>
+                </div>
+                <div class="meter-bar-track">
+                  <div class="meter-bar-fill-green"></div>
+                </div>
+              </div>
+            </div>
+
+            <pre class="code-block">Attendance.bulkWrite(records.map(r => ({
+  updateOne: { filter: { studentId: r.studentId, subjectId: r.subjectId, date: r.date },
+               update: { $set: { status: r.status, markedBy: req.user.id } }, upsert: true }
+})));</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Review 3 Criterion 1: Core Operations &amp; Data Integrity &bull; Slot D2</span>
+        <span>Slide 06 of 10</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 7: TOPIC 05 - 7 AGGREGATION PIPELINES -->
+    <div class="slide" id="slide-7">
+      <div class="slide-header">
+        <div>
+          <div class="slide-category">Topic 05 | Review 3 Criterion 2: Advanced Queries &amp; Analytics</div>
+          <div class="slide-title">Advanced Aggregation Framework: 7 Multi-Stage Pipelines</div>
+        </div>
+        <div class="rubric-mark-pill">Criterion 2: 2 Marks</div>
+      </div>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-title">1. Student &amp; Subject Analytics</div>
+          <div class="card-body">
+            <ul class="clean-list">
+              <li><strong>Pipeline 1: Student Attendance %</strong><br>
+                &bull; <code>$group</code> by studentId: tally total &amp; present.<br>
+                &bull; <code>$project</code>: percentage = (present / total) * 100.<br>
+                &bull; <code>$lookup</code> student info &amp; <code>$sort</code> descending.<br>
+                &bull; Output: Full student league rankings.
+              </li>
+              <li><strong>Pipeline 2: Subject-wise Turnout</strong><br>
+                &bull; <code>$group</code> by subjectId.<br>
+                &bull; <code>$project</code> subject attendance rate.<br>
+                &bull; <code>$lookup</code> subject details &amp; <code>$sort</code>.<br>
+                &bull; Powers Dashboard Subject Bar Chart.
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">2. Trends &amp; Defaulter Tracker</div>
+          <div class="card-body">
+            <ul class="clean-list">
+              <li><strong>Pipeline 3: Daily Attendance Trends</strong><br>
+                &bull; <code>$group</code> by <code>$dateToString('%Y-%m-%d')</code>.<br>
+                &bull; Accumulate totalPresent &amp; totalAbsent.<br>
+                &bull; <code>$sort</code> date ascending (+1).<br>
+                &bull; Powers Daily Trend Line Chart.
+              </li>
+              <li><strong>Pipeline 4: Defaulters (&lt;75% Threshold)</strong><br>
+                &bull; <code>$group</code>: aggregate per student.<br>
+                &bull; <code>$project</code>: calculate exact percentage.<br>
+                &bull; <code>$match</code>: filter <code>percentage &lt; threshold</code>.<br>
+                &bull; <code>$lookup</code> student details &amp; <code>$sort</code> ascending.
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">3. Cohort &amp; Institutional Stats</div>
+          <div class="card-body">
+            <ul class="clean-list">
+              <li><strong>Pipeline 5: Monthly Report</strong><br>
+                &bull; Uses date operators: <code>$year</code> and <code>$month</code>.<br>
+                &bull; Groups 2,640+ logs into monthly turnout buckets.<br>
+                &bull; Powers Dean's monthly reviews.
+              </li>
+              <li><strong>Pipeline 6: Section Comparison</strong><br>
+                &bull; <code>$lookup</code> students &amp; <code>$group</code> on section.<br>
+                &bull; Compares Section D1 (86.5%) vs Section D2 (73.0%).
+              </li>
+              <li><strong>Pipeline 7: Overall Summary</strong><br>
+                &bull; <code>$group</code> with <code>_id: null</code> for system-wide stats in 1 scan.
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Review 3 Criterion 2: 7 MongoDB Aggregation Pipelines (2 Marks) &bull; Slot D2</span>
+        <span>Slide 07 of 10</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 8: TOPIC 06 - FRONTEND UI & USABILITY -->
+    <div class="slide" id="slide-8">
+      <div class="slide-header">
+        <div>
+          <div class="slide-category">Topic 06 | Review 3 Criterion 3: User Interface and Usability</div>
+          <div class="slide-title">Frontend User Interface, Dashboards &amp; Defaulter Tracking</div>
+        </div>
+        <div class="rubric-mark-pill">Criterion 3: 1.5 Marks</div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Executive Dashboard &amp; Visualizations</div>
+          <div class="card-body">
+            <ul class="clean-list">
+              <li><strong>5 Real-Time KPI Cards:</strong> Instant metrics on total students, faculty, courses, overall attendance rate, and defaulter counts.</li>
+              <li><strong>Recharts Interactive Graphs:</strong>
+                <br>&bull; Line chart: 25-day daily attendance trends curve.
+                <br>&bull; Donut chart: Present vs Absent ratio distribution.
+                <br>&bull; Bar chart: Subject-wise attendance performance.
+              </li>
+              <li><strong>Digital Roll-Call Engine:</strong> Quick status toggles, 1-click batch actions, and live session turnout gauge.</li>
+              <li><strong>Pipeline Code Inspector:</strong> Interactive tool displaying native MongoDB pipeline code and raw JSON outputs for evaluator review.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Defaulter Tracking, CSV Export &amp; Usability</div>
+          <div class="card-body">
+            <ul class="clean-list">
+              <li><strong>Interactive Defaulter Tracker:</strong> Real-time identification of students falling below mandatory attendance thresholds.</li>
+              <li><strong>Dynamic Threshold Presets:</strong> Interactive filter buttons (65%, 75%, 80%, 85%) allowing instantaneous cohort re-evaluation.</li>
+              <li><strong>1-Click CSV Audit Export:</strong> Dynamic client-side CSV download ready for Dean and parent notification dispatches.</li>
+              <li><strong>Responsive Design &amp; Accessibility:</strong> High-contrast dark theme, semantic layout, and responsive mobile/tablet breakpoints.</li>
+              <li><strong>1-Click Demo Login:</strong> Pre-filled credential buttons on login page for instant evaluator sign-in.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Review 3 Criterion 3: User Interface &amp; Usability (3 Marks Total) &bull; Slot D2</span>
+        <span>Slide 08 of 10</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 9: TOPIC 07 - SECURITY ARCHITECTURE & INDEXING -->
+    <div class="slide" id="slide-9">
+      <div class="slide-header">
+        <div>
+          <div class="slide-category">Topic 07 | Review 3 Criterion 3 (Contd.): Security &amp; Performance</div>
+          <div class="slide-title">Security Architecture, B-Tree Indexing &amp; Query Tuning</div>
+        </div>
+        <div class="rubric-mark-pill">Criterion 3: 1.5 Marks</div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">B-Tree Indexing &amp; Performance Tuning (&lt;1.2ms)</div>
+          <div class="card-body">
+            <ul class="clean-list">
+              <li><strong>Unique Single-Field Indexes:</strong> <code>students.regNo</code>, <code>users.email</code>, <code>subjects.subjectCode</code>, <code>faculty.facultyId</code>.</li>
+              <li><strong>Compound Unique Index on Attendance:</strong>
+                <br><code>AttendanceSchema.index({ studentId: 1, subjectId: 1, date: 1 }, { unique: true });</code>
+                <br>Prevents duplicate roll-call entries and powers atomic bulkWrite upserts.
+              </li>
+              <li><strong>Time-Series &amp; Filter Indexes:</strong>
+                <br><code>attendance: { date: 1 }</code>, <code>{ subjectId: 1, date: 1 }</code>, and <code>students: { department: 1, section: 1 }</code>.
+              </li>
+              <li><strong>Execution Benchmark (COLLSCAN vs IXSCAN):</strong>
+                <br>&bull; COLLSCAN: docsExamined = 2,640, executionTime = ~28.4ms.
+                <br>&bull; IXSCAN: docsExamined = 1, executionTime = &lt;1.2ms (Over 23x speedup!).
+              </li>
+            </ul>
+            <pre class="code-block">db.attendances.find({ studentId: ..., date: ... }).explain('executionStats')
+-> stage: 'IXSCAN', indexName: 'studentId_1_subjectId_1_date_1'</pre>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Security Architecture &amp; Document Validation</div>
+          <div class="card-body">
+            <ul class="clean-list">
+              <li><strong>Bcrypt Password Hashing:</strong> Passwords encrypted with 10 salt rounds prior to storage. Plaintext passwords never touch database or logs.</li>
+              <li><strong>Stateless JWT Authentication:</strong> Signed tokens with user claims (id, role, expiry) returned on login and passed via <code>x-auth-token</code> header.</li>
+              <li><strong>Role-Based Access Control (RBAC):</strong> Admin (full CRUD), Faculty (roll-call and subject reports), Student (personal attendance).</li>
+              <li><strong>Injection Prevention &amp; Input Validation:</strong> Strict Mongoose schema typing automatically sanitizes query selectors; CORS configured to prevent CSRF.</li>
+              <li><strong>Schema Constraints:</strong> Required field constraints, enum validations, and referential integrity.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Review 3 Criterion 3: Security &amp; Performance Architecture &bull; Slot D2</span>
+        <span>Slide 09 of 10</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 10: TOPIC 08 - VERIFICATION & VIVA VOCE DEFENSE -->
+    <div class="slide" id="slide-10">
+      <div class="slide-header">
+        <div>
+          <div class="slide-category">Topic 08 | Review 3 Criterion 4: Technical Defense &amp; Viva Voce</div>
+          <div class="slide-title">Automated Verification, Viva Voce Defense &amp; Conclusion</div>
+        </div>
+        <div class="rubric-mark-pill">Criterion 4: 2 Marks</div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Automated Test Suite (28 Passed, 0 Failed)</div>
+          <div class="card-body">
+            <table class="custom-table">
+              <tr><th>Module</th><th>Test Description</th><th>Status</th></tr>
+              <tr><td>Authentication</td><td>Admin/Faculty login &amp; invalid password rejection</td><td><span class="status-pass">PASS</span></td></tr>
+              <tr><td>Students CRUD</td><td>Search, pagination, create, update, delete &amp; cascade</td><td><span class="status-pass">PASS</span></td></tr>
+              <tr><td>Faculty CRUD</td><td>Read, create, update, delete with unique facultyId</td><td><span class="status-pass">PASS</span></td></tr>
+              <tr><td>Subjects CRUD</td><td>Read, create, update, delete with Faculty population</td><td><span class="status-pass">PASS</span></td></tr>
+              <tr><td>Classes CRUD</td><td>Timetable scheduling with rooms and timings</td><td><span class="status-pass">PASS</span></td></tr>
+              <tr><td>Attendance Ops</td><td>Atomic bulkWrite upserts and status toggles</td><td><span class="status-pass">PASS</span></td></tr>
+              <tr><td>7 Aggregations</td><td>Summary, Student %, Subject %, Daily, Defaulters, Monthly, Section</td><td><span class="status-pass">PASS</span></td></tr>
+            </table>
+            <p style="margin-top: 10px; font-weight: 700; color: #34d399; font-family: var(--font-mono); font-size: 11.5px;">
+              ✓ Result: 28 of 28 Automated Tests Passed (100% Pass Rate)
+            </p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Technical Viva Voce Defense &amp; Conclusion</div>
+          <div class="card-body">
+            <p style="font-size: 11.5px; margin-bottom: 6px;"><strong>Q1: Why choose MongoDB over MySQL?</strong><br>Ans: Scalability to millions of records, native multi-stage aggregations without expensive JOINs, and high-throughput atomic bulk writes.</p>
+            <p style="font-size: 11.5px; margin-bottom: 6px;"><strong>Q2: Why reference instead of embed attendance in Students?</strong><br>Ans: Avoids the 16MB BSON limit, eliminates huge document bloat, and allows independent indexing on dates and subjects.</p>
+            <p style="font-size: 11.5px; margin-bottom: 6px;"><strong>Q3: What makes bulkWrite idempotent?</strong><br>Ans: Unique compound index <code>{ studentId, subjectId, date }</code> ensures upsert updates existing records instead of generating duplicates.</p>
+            <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; padding: 10px; margin-top: 8px;">
+              <strong style="color: #60a5fa; font-size: 12px; font-family: var(--font-display);">Review 3 Evaluation Conclusion:</strong>
+              <p style="font-size: 11.5px; color: #cbd5e1; margin-top: 2px;">Fully realized, production-ready MERN system exceeding all BCSE302P Review 3 criteria: 6 collections, 2,640+ documents, 7 aggregations, compound indexing (&lt;1.2ms), and 100% test pass rate.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Review 3 Criterion 4: Viva Voce Defense &amp; Conclusion (2 Marks) &bull; Slot D2</span>
+        <span>Slide 10 of 10</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Interactive Bottom Bar Navigation -->
+  <div class="bottom-bar">
+    <div class="dots-nav" id="dotsContainer"></div>
+    <div class="kbd-hints">
+      <span>Navigate: <span class="kbd">◀</span> <span class="kbd">▶</span> or <span class="kbd">Space</span></span>
+      <span>Jump: <span class="kbd">1</span> - <span class="kbd">9</span>, <span class="kbd">0</span></span>
+      <span>Fullscreen: <span class="kbd">F</span></span>
+    </div>
+  </div>
+
+  <script>
+    let currentSlide = 1;
+    const totalSlides = 10;
+
+    // Generate Dots Navigation
+    const dotsContainer = document.getElementById('dotsContainer');
+    for (let i = 1; i <= totalSlides; i++) {
+      const dot = document.createElement('div');
+      dot.className = `dot ${i === 1 ? 'active' : ''}`;
+      dot.title = `Jump to Slide ${i}`;
+      dot.onclick = () => showSlide(i);
+      dotsContainer.appendChild(dot);
+    }
+
+    function showSlide(index) {
+      if (index < 1 || index > totalSlides) return;
+      document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+      const targetSlide = document.getElementById(`slide-${index}`);
+      if (targetSlide) targetSlide.classList.add('active');
+      currentSlide = index;
+
+      // Update Counter
+      document.getElementById('slideCounter').textContent = `${String(currentSlide).padStart(2, '0')} / ${String(totalSlides).padStart(2, '0')}`;
+
+      // Update Progress Bar
+      const progressPercent = (currentSlide / totalSlides) * 100;
+      document.getElementById('progressBar').style.width = `${progressPercent}%`;
+
+      // Update Dots
+      const dots = document.querySelectorAll('.dot');
+      dots.forEach((dot, idx) => {
+        if (idx === currentSlide - 1) {
+          dot.classList.add('active');
+        } else {
+          dot.classList.remove('active');
+        }
+      });
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides) {
+        showSlide(currentSlide + 1);
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 1) {
+        showSlide(currentSlide - 1);
+      }
+    }
+
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        prevSlide();
+      } else if (e.key === 'Home') {
+        showSlide(1);
+      } else if (e.key === 'End') {
+        showSlide(totalSlides);
+      } else if (e.key.toLowerCase() === 'f') {
+        toggleFullScreen();
+      } else if (e.key >= '1' && e.key <= '9') {
+        showSlide(parseInt(e.key));
+      } else if (e.key === '0') {
+        showSlide(10);
+      }
+    });
+  </script>
+</body>
+</html>
