@@ -6,6 +6,9 @@ import {
 } from 'lucide-react';
 
 const Students = () => {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const isStudent = user.role === 'student';
+
   const [students, setStudents] = useState([]);
   const [totalStudents, setTotalStudents] = useState(0);
   const [page, setPage] = useState(1);
@@ -156,31 +159,37 @@ const Students = () => {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
-              CRUD Operations
+              {isStudent ? 'Verified Student Profile' : 'CRUD Operations'}
             </span>
-            <span className="text-xs text-gray-500">Total Enrolled: {totalStudents}</span>
+            <span className="text-xs text-gray-500">
+              {isStudent ? 'Personal Academic Record' : `Total Enrolled: ${totalStudents}`}
+            </span>
           </div>
-          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Student Directory</h1>
+          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
+            {isStudent ? 'My Academic Profile' : 'Student Directory'}
+          </h1>
         </div>
 
-        <button
-          onClick={() => {
-            setFormData({
-              regNo: '24BCE' + Math.floor(1000 + Math.random() * 9000),
-              name: '',
-              email: '',
-              department: 'Computer Science',
-              year: 3,
-              section: 'D2',
-              semester: 5
-            });
-            setIsAddModalOpen(true);
-          }}
-          className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow-md shadow-blue-200 transition"
-        >
-          <Plus size={18} />
-          Add New Student
-        </button>
+        {!isStudent && (
+          <button
+            onClick={() => {
+              setFormData({
+                regNo: '24BCE' + Math.floor(1000 + Math.random() * 9000),
+                name: '',
+                email: '',
+                department: 'Computer Science',
+                year: 3,
+                section: 'D2',
+                semester: 5
+              });
+              setIsAddModalOpen(true);
+            }}
+            className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow-md shadow-blue-200 transition"
+          >
+            <Plus size={18} />
+            Add New Student
+          </button>
+        )}
       </div>
 
       {/* Filters & Search Toolbar */}
@@ -268,24 +277,29 @@ const Students = () => {
                         <button
                           onClick={() => handleViewDetail(student)}
                           title="View Attendance Breakdown"
-                          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                          className="flex items-center gap-1 px-2.5 py-1 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg text-xs font-semibold transition"
                         >
-                          <Eye size={16} />
+                          <Eye size={14} />
+                          {isStudent ? 'My Attendance' : 'View'}
                         </button>
-                        <button
-                          onClick={() => openEditModal(student)}
-                          title="Edit Details"
-                          className="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition"
-                        >
-                          <Edit2 size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(student._id, student.name)}
-                          title="Delete Student"
-                          className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition"
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                        {!isStudent && (
+                          <>
+                            <button
+                              onClick={() => openEditModal(student)}
+                              title="Edit Details"
+                              className="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition"
+                            >
+                              <Edit2 size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(student._id, student.name)}
+                              title="Delete Student"
+                              className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>

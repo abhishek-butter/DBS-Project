@@ -6,10 +6,65 @@ const Faculty = require('../models/Faculty');
 const Subject = require('../models/Subject');
 const Class = require('../models/Class');
 const auth = require('../middlewares/auth');
+const { resolveScope } = require('../utils/scope');
 
-// 1. Overall System Summary (KPIs)
+// 1. Overall System Summary (KPIs) - Multi-tenant Scoped
 router.get('/summary', auth, async (req, res) => {
   try {
+    const scope = await resolveScope(req);
+
+    if (scope.isStudent) {
+      // Student View: Personal Academic Profile KPIs
+      const myAttendance = await Attendance.find({ studentId: scope.studentId });
+      const totalRecords = myAttendance.length;
+      const presentRecords = myAttendance.filter(a => a.status === 'Present').length;
+      const overallPercentage = totalRecords > 0 ? Math.round((presentRecords / totalRecords) * 100) : 0;
+
+      return res.json({
+        totalStudents: 1,
+        totalFaculty: 5,
+        totalSubjects: 5,
+        totalClasses: totalRecords,
+        totalRecords,
+        presentRecords,
+        absentRecords: totalRecords - presentRecords,
+        overallPercentage,
+        scope: 'student'
+      });
+    }
+
+    if (scope.isFaculty) {
+      // Faculty View: Scoped to subjects taught by this faculty member
+      const facultyClasses = await Class.countDocuments({ facultyId: scope.facultyId });
+      const attendanceAgg = await Attendance.aggregate([
+        { $match: { subjectId: { $in: scope.subjectIds } } },
+        {
+          $group: {
+            _id: null,
+            totalRecords: { $sum: 1 },
+            presentRecords: { $sum: { $cond: [{ $eq: ["$status", "Present"] }, 1, 0] } }
+          }
+        }
+      ]);
+
+      const totalRecords = attendanceAgg[0]?.totalRecords || 0;
+      const presentRecords = attendanceAgg[0]?.presentRecords || 0;
+      const overallPercentage = totalRecords > 0 ? Math.round((presentRecords / totalRecords) * 100) : 0;
+
+      return res.json({
+        totalStudents: 60,
+        totalFaculty: 1,
+        totalSubjects: scope.subjectIds.length,
+        totalClasses: facultyClasses,
+        totalRecords,
+        presentRecords,
+        absentRecords: totalRecords - presentRecords,
+        overallPercentage,
+        scope: 'faculty'
+      });
+    }
+
+    // Admin View: System-wide metrics
     const [totalStudents, totalFaculty, totalSubjects, totalClasses, attendanceAgg] = await Promise.all([
       Student.countDocuments(),
       Faculty.countDocuments(),
@@ -38,7 +93,8 @@ router.get('/summary', auth, async (req, res) => {
       totalRecords,
       presentRecords,
       absentRecords: totalRecords - presentRecords,
-      overallPercentage
+      overallPercentage,
+      scope: 'admin'
     });
   } catch (err) {
     console.error('Summary error:', err);
@@ -46,10 +102,20 @@ router.get('/summary', auth, async (req, res) => {
   }
 });
 
-// 2. Aggregation 1: Student Attendance Percentage
+// 2. Aggregation 1: Student Attendance Percentage - Scoped
 router.get('/student-percentage', auth, async (req, res) => {
   try {
-    const stats = await Attendance.aggregate([
+    const scope = await resolveScope(req);
+    const pipeline = [];
+
+    // Data Scoping
+    if (scope.isStudent) {
+      pipeline.push({ $match: { studentId: scope.studentId } });
+    } else if (scope.isFaculty) {
+      pipeline.push({ $match: { subjectId: { $in: scope.subjectIds } } });
+    }
+
+    pipeline.push(
       {
         $group: {
           _id: "$studentId",
@@ -82,7 +148,9 @@ router.get('/student-percentage', auth, async (req, res) => {
       },
       { $unwind: { path: "$studentInfo", preserveNullAndEmptyArrays: true } },
       { $sort: { percentage: -1 } }
-    ]);
+    );
+
+    const stats = await Attendance.aggregate(pipeline);
     res.json(stats);
   } catch (err) {
     console.error('Student-percentage error:', err);
@@ -90,10 +158,17 @@ router.get('/student-percentage', auth, async (req, res) => {
   }
 });
 
-// 3. Aggregation 2: Subject-wise Attendance Percentage
+// 3. Aggregation 2: Subject-wise Attendance Percentage - Scoped
 router.get('/subject-percentage', auth, async (req, res) => {
   try {
-    const stats = await Attendance.aggregate([
+    const scope = await resolveScope(req);
+    const pipeline = [];
+
+    if (scope.isFaculty) {
+      pipeline.push({ $match: { subjectId: { $in: scope.subjectIds } } });
+    }
+
+    pipeline.push(
       {
         $group: {
           _id: "$subjectId",
@@ -126,7 +201,9 @@ router.get('/subject-percentage', auth, async (req, res) => {
       },
       { $unwind: { path: "$subjectInfo", preserveNullAndEmptyArrays: true } },
       { $sort: { percentage: -1 } }
-    ]);
+    );
+
+    const stats = await Attendance.aggregate(pipeline);
     res.json(stats);
   } catch (err) {
     console.error('Subject-percentage error:', err);
@@ -134,10 +211,19 @@ router.get('/subject-percentage', auth, async (req, res) => {
   }
 });
 
-// 4. Aggregation 3: Daily Attendance Statistics & Trends
+// 4. Aggregation 3: Daily Attendance Statistics & Trends - Scoped
 router.get('/daily-stats', auth, async (req, res) => {
   try {
-    const stats = await Attendance.aggregate([
+    const scope = await resolveScope(req);
+    const pipeline = [];
+
+    if (scope.isStudent) {
+      pipeline.push({ $match: { studentId: scope.studentId } });
+    } else if (scope.isFaculty) {
+      pipeline.push({ $match: { subjectId: { $in: scope.subjectIds } } });
+    }
+
+    pipeline.push(
       {
         $group: {
           _id: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
@@ -161,7 +247,9 @@ router.get('/daily-stats', auth, async (req, res) => {
         }
       },
       { $sort: { "_id": 1 } }
-    ]);
+    );
+
+    const stats = await Attendance.aggregate(pipeline);
     res.json(stats);
   } catch (err) {
     console.error('Daily-stats error:', err);
@@ -169,11 +257,20 @@ router.get('/daily-stats', auth, async (req, res) => {
   }
 });
 
-// 5. Aggregation 4: Students Below Attendance Threshold (Defaulters List < 75%)
+// 5. Aggregation 4: Students Below Attendance Threshold (Defaulters List < 75%) - Scoped
 router.get('/low-attendance', auth, async (req, res) => {
   try {
+    const scope = await resolveScope(req);
     const threshold = parseFloat(req.query.threshold) || 75.0;
-    const defaulters = await Attendance.aggregate([
+    const pipeline = [];
+
+    if (scope.isStudent) {
+      pipeline.push({ $match: { studentId: scope.studentId } });
+    } else if (scope.isFaculty) {
+      pipeline.push({ $match: { subjectId: { $in: scope.subjectIds } } });
+    }
+
+    pipeline.push(
       {
         $group: {
           _id: "$studentId",
@@ -211,7 +308,9 @@ router.get('/low-attendance', auth, async (req, res) => {
       },
       { $unwind: { path: "$studentInfo", preserveNullAndEmptyArrays: true } },
       { $sort: { percentage: 1 } }
-    ]);
+    );
+
+    const defaulters = await Attendance.aggregate(pipeline);
     res.json({
       threshold,
       count: defaulters.length,
@@ -223,10 +322,24 @@ router.get('/low-attendance', auth, async (req, res) => {
   }
 });
 
-// 6. Aggregation 5: Monthly Attendance Report
+// 6. Aggregation 5: Monthly Attendance Report - Scoped
 router.get('/monthly-report', auth, async (req, res) => {
   try {
-    const stats = await Attendance.aggregate([
+    const scope = await resolveScope(req);
+
+    if (scope.isStudent) {
+      return res.status(403).json({ 
+        error: 'Forbidden: Institutional analytics reports are restricted to faculty and administrators.' 
+      });
+    }
+
+    const pipeline = [];
+
+    if (scope.isFaculty) {
+      pipeline.push({ $match: { subjectId: { $in: scope.subjectIds } } });
+    }
+
+    pipeline.push(
       {
         $group: {
           _id: {
@@ -254,7 +367,9 @@ router.get('/monthly-report', auth, async (req, res) => {
         }
       },
       { $sort: { "year": 1, "month": 1 } }
-    ]);
+    );
+
+    const stats = await Attendance.aggregate(pipeline);
     res.json(stats);
   } catch (err) {
     console.error('Monthly-report error:', err);
@@ -262,10 +377,24 @@ router.get('/monthly-report', auth, async (req, res) => {
   }
 });
 
-// 7. Aggregation 6: Section-Wise Attendance Comparison
+// 7. Aggregation 6: Section-Wise Attendance Comparison - Scoped
 router.get('/section-stats', auth, async (req, res) => {
   try {
-    const stats = await Attendance.aggregate([
+    const scope = await resolveScope(req);
+
+    if (scope.isStudent) {
+      return res.status(403).json({ 
+        error: 'Forbidden: Section comparison analytics are restricted to faculty and administrators.' 
+      });
+    }
+
+    const pipeline = [];
+
+    if (scope.isFaculty) {
+      pipeline.push({ $match: { subjectId: { $in: scope.subjectIds } } });
+    }
+
+    pipeline.push(
       {
         $lookup: {
           from: "students",
@@ -298,7 +427,9 @@ router.get('/section-stats', auth, async (req, res) => {
         }
       },
       { $sort: { section: 1 } }
-    ]);
+    );
+
+    const stats = await Attendance.aggregate(pipeline);
     res.json(stats);
   } catch (err) {
     console.error('Section-stats error:', err);

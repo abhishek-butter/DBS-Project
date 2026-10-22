@@ -57,7 +57,7 @@ router.put('/:id', auth, async (req, res) => {
     const faculty = await Faculty.findByIdAndUpdate(
       req.params.id,
       { $set: req.body },
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     );
     if (!faculty) return res.status(404).json({ error: 'Faculty not found' });
     res.json(faculty);

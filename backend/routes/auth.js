@@ -12,10 +12,29 @@ router.post('/login', async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ msg: 'Invalid Credentials' });
 
-    const payload = { user: { id: user.id, role: user.role } };
+    const payload = { 
+      user: { 
+        id: user.id, 
+        role: user.role,
+        name: user.name,
+        email: user.email,
+        studentId: user.studentId || null,
+        facultyId: user.facultyId || null
+      } 
+    };
     jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '5 days' }, (err, token) => {
       if (err) throw err;
-      res.json({ token, user: { id: user.id, name: user.name, role: user.role } });
+      res.json({ 
+        token, 
+        user: { 
+          id: user.id, 
+          name: user.name, 
+          role: user.role,
+          email: user.email,
+          studentId: user.studentId || null,
+          facultyId: user.facultyId || null
+        } 
+      });
     });
   } catch (err) {
     res.status(500).send('Server error');

@@ -14,6 +14,9 @@ function App() {
     return <Login setToken={setToken} />;
   }
 
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const isStudent = user.role === 'student';
+
   return (
     <Router>
       <div className="flex h-screen bg-slate-50 overflow-hidden">
@@ -23,7 +26,10 @@ function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/students" element={<Students />} />
             <Route path="/attendance" element={<Attendance />} />
-            <Route path="/analytics" element={<Analytics />} />
+            <Route 
+              path="/analytics" 
+              element={isStudent ? <Navigate to="/" replace /> : <Analytics />} 
+            />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </div>

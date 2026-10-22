@@ -15,11 +15,19 @@ const Sidebar = ({ setToken }) => {
     setToken('');
   };
 
+  const isStudent = user.role === 'student';
+
   const navItems = [
     { name: 'Dashboard', path: '/', icon: <LayoutDashboard size={20} /> },
     { name: 'Students', path: '/students', icon: <Users size={20} /> },
-    { name: 'Mark Attendance', path: '/attendance', icon: <CheckSquare size={20} /> },
-    { name: 'Analytics & Reports', path: '/analytics', icon: <BarChart3 size={20} /> },
+    { 
+      name: isStudent ? 'View Attendance' : 'Mark Attendance', 
+      path: '/attendance', 
+      icon: <CheckSquare size={20} /> 
+    },
+    ...(!isStudent ? [
+      { name: 'Analytics & Reports', path: '/analytics', icon: <BarChart3 size={20} /> }
+    ] : []),
   ];
 
   return (

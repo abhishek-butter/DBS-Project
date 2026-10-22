@@ -3,10 +3,17 @@ const router = express.Router();
 const Subject = require('../models/Subject');
 const auth = require('../middlewares/auth');
 
-// READ ALL
+const { resolveScope } = require('../utils/scope');
+
+// READ ALL - Scoped: Faculty only sees their assigned courses; Admin sees all
 router.get('/', auth, async (req, res) => {
   try {
-    const subjects = await Subject.find().populate('facultyId').sort({ subjectCode: 1 });
+    const scope = await resolveScope(req);
+    let query = {};
+    if (scope.isFaculty) {
+      query.facultyId = scope.facultyId;
+    }
+    const subjects = await Subject.find(query).populate('facultyId').sort({ subjectCode: 1 });
     res.json(subjects);
   } catch (err) {
     console.error('Subjects fetch error:', err);
@@ -58,7 +65,7 @@ router.put('/:id', auth, async (req, res) => {
     const subject = await Subject.findByIdAndUpdate(
       req.params.id,
       { $set: req.body },
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     );
     if (!subject) return res.status(404).json({ error: 'Subject not found' });
     res.json(subject);

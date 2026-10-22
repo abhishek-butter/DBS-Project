@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import api from '../api';
 import { 
   BarChart, Bar, ResponsiveContainer, XAxis, YAxis, Tooltip, 
@@ -12,6 +13,12 @@ import {
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4'];
 
 const Analytics = () => {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+  if (user.role === 'student') {
+    return <Navigate to="/" replace />;
+  }
+
   const [threshold, setThreshold] = useState(75);
   const [defaulters, setDefaulters] = useState([]);
   const [monthlyStats, setMonthlyStats] = useState([]);

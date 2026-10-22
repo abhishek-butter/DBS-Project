@@ -47,17 +47,9 @@ const seedData = async () => {
   const salt = await bcrypt.genSalt(10);
   const password = await bcrypt.hash('password123', salt);
 
-  console.log('Seeding authentication users...');
-  const users = await User.insertMany([
-    { name: 'System Administrator', email: 'admin@example.com', password, role: 'admin' },
-    { name: 'Prof. Rajesh Sharma', email: 'faculty@example.com', password, role: 'faculty' },
-    { name: 'Abhishek VS', email: 'student@example.com', password, role: 'student' }
-  ]);
-  const adminUser = users[0];
-
   console.log('Seeding faculty members...');
   const facultyMembers = [
-    { facultyId: 'FAC001', name: 'Prof. Rajesh Sharma', email: 'sharma.rajesh@vit.ac.in', department: 'Computer Science' },
+    { facultyId: 'FAC001', name: 'Prof. Rajesh Sharma', email: 'faculty@example.com', department: 'Computer Science' },
     { facultyId: 'FAC002', name: 'Prof. Sunita Rao', email: 'sunita.rao@vit.ac.in', department: 'Computer Science' },
     { facultyId: 'FAC003', name: 'Prof. Vikram Singh', email: 'vikram.singh@vit.ac.in', department: 'Computer Science' },
     { facultyId: 'FAC004', name: 'Prof. Ananya Iyer', email: 'ananya.iyer@vit.ac.in', department: 'Computer Science' },
@@ -88,7 +80,7 @@ const seedData = async () => {
     {
       regNo: '24BCE0404',
       name: 'Abhishek VS',
-      email: 'abhishek.vs2024@vitstudent.ac.in',
+      email: 'student@example.com',
       department: 'Computer Science',
       year: 3,
       section: 'D2',
@@ -120,6 +112,31 @@ const seedData = async () => {
   }
 
   const insertedStudents = await Student.insertMany(studentList);
+
+  console.log('Seeding authentication users with role entity links...');
+  const users = await User.insertMany([
+    { 
+      name: 'System Administrator', 
+      email: 'admin@example.com', 
+      password, 
+      role: 'admin' 
+    },
+    { 
+      name: 'Prof. Rajesh Sharma', 
+      email: 'faculty@example.com', 
+      password, 
+      role: 'faculty',
+      facultyId: insertedFaculties[0]._id 
+    },
+    { 
+      name: 'Abhishek VS', 
+      email: 'student@example.com', 
+      password, 
+      role: 'student',
+      studentId: insertedStudents[0]._id 
+    }
+  ]);
+  const adminUser = users[0];
 
   console.log('Generating classes and attendance for past 25 days...');
   const classesToInsert = [];

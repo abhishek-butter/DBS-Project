@@ -1,4 +1,27 @@
+# Dependencies
 node_modules/
-.env
 dist/
+
+# Environment Variables
+.env
+.env.local
+
+# IDE & Editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
 .DS_Store
+Thumbs.db
+
+# Python bytecode & generator scratch
+__pycache__/
+*.pyc
+generate_*.py
+create_*.py
+scratch_*.py
+build_backend.js
+build_frontend.js
+playground-*.js

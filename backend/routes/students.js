@@ -3,25 +3,32 @@ const router = express.Router();
 const Student = require('../models/Student');
 const Attendance = require('../models/Attendance');
 const auth = require('../middlewares/auth');
+const { resolveScope } = require('../utils/scope');
 
-// READ ALL - with search, filter, and pagination
+// READ ALL - with search, filter, pagination, and RBAC scoping
 router.get('/', auth, async (req, res) => {
   try {
+    const scope = await resolveScope(req);
     const { search, section, department, page, limit } = req.query;
     let query = {};
 
-    if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { regNo: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } }
-      ];
-    }
-    if (section && section !== 'All') {
-      query.section = section;
-    }
-    if (department && department !== 'All') {
-      query.department = department;
+    // If student, restrict strictly to their own student profile
+    if (scope.isStudent) {
+      query._id = scope.studentId;
+    } else {
+      if (search) {
+        query.$or = [
+          { name: { $regex: search, $options: 'i' } },
+          { regNo: { $regex: search, $options: 'i' } },
+          { email: { $regex: search, $options: 'i' } }
+        ];
+      }
+      if (section && section !== 'All') {
+        query.section = section;
+      }
+      if (department && department !== 'All') {
+        query.department = department;
+      }
     }
 
     if (page && limit) {
@@ -49,9 +56,14 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
-// READ ONE - with attendance history
+// READ ONE - with attendance history & student isolation check
 router.get('/:id', auth, async (req, res) => {
   try {
+    const scope = await resolveScope(req);
+    if (scope.isStudent && req.params.id !== scope.studentId?.toString()) {
+      return res.status(403).json({ error: 'Access Denied: Students can only view their own profile and attendance records.' });
+    }
+
     const student = await Student.findById(req.params.id);
     if (!student) return res.status(404).json({ error: 'Student not found' });
 
@@ -74,8 +86,15 @@ router.get('/:id', auth, async (req, res) => {
   }
 });
 
-// CREATE
+// CREATE - Restricted to Admin and Faculty only
 router.post('/', auth, async (req, res) => {
+  if (req.user.role !== 'admin' && req.user.role !== 'faculty') {
+    return res.status(403).json({ 
+      error: 'Access Denied: Only administrators and faculty can register new students.',
+      userRole: req.user.role 
+    });
+  }
+
   try {
     const { regNo, name, email, department, year, section, semester } = req.body;
     if (!regNo || !name || !email) {
@@ -105,13 +124,20 @@ router.post('/', auth, async (req, res) => {
   }
 });
 
-// UPDATE
+// UPDATE - Restricted to Admin and Faculty only
 router.put('/:id', auth, async (req, res) => {
+  if (req.user.role !== 'admin' && req.user.role !== 'faculty') {
+    return res.status(403).json({ 
+      error: 'Access Denied: Only administrators and faculty can update student profiles.',
+      userRole: req.user.role 
+    });
+  }
+
   try {
     const student = await Student.findByIdAndUpdate(
       req.params.id,
       { $set: req.body },
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     );
     if (!student) return res.status(404).json({ error: 'Student not found' });
     res.json(student);
@@ -121,8 +147,15 @@ router.put('/:id', auth, async (req, res) => {
   }
 });
 
-// DELETE
+// DELETE - Restricted to Admin only
 router.delete('/:id', auth, async (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ 
+      error: 'Access Denied: Only administrators can delete student records.',
+      userRole: req.user.role 
+    });
+  }
+
   try {
     const student = await Student.findByIdAndDelete(req.params.id);
     if (!student) return res.status(404).json({ error: 'Student not found' });

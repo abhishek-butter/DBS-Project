@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "seed": "node seed.js",
+    "show-db": "node show_db.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

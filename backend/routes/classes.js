@@ -3,10 +3,17 @@ const router = express.Router();
 const Class = require('../models/Class');
 const auth = require('../middlewares/auth');
 
-// READ ALL
+const { resolveScope } = require('../utils/scope');
+
+// READ ALL - Scoped: Faculty only sees their scheduled classes; Admin sees all
 router.get('/', auth, async (req, res) => {
   try {
-    const classes = await Class.find()
+    const scope = await resolveScope(req);
+    let query = {};
+    if (scope.isFaculty) {
+      query.facultyId = scope.facultyId;
+    }
+    const classes = await Class.find(query)
       .populate('subjectId facultyId')
       .sort({ date: -1 });
     res.json(classes);
@@ -28,8 +35,15 @@ router.get('/:id', auth, async (req, res) => {
   }
 });
 
-// CREATE
+// CREATE - Restricted to Faculty and Admin only
 router.post('/', auth, async (req, res) => {
+  if (req.user.role !== 'admin' && req.user.role !== 'faculty') {
+    return res.status(403).json({ 
+      error: 'Access Denied: Only faculty and administrators can schedule classes.',
+      userRole: req.user.role 
+    });
+  }
+
   try {
     const { subjectId, facultyId, date, startTime, endTime, room } = req.body;
     const newClass = new Class({
@@ -49,13 +63,20 @@ router.post('/', auth, async (req, res) => {
   }
 });
 
-// UPDATE
+// UPDATE - Restricted to Faculty and Admin only
 router.put('/:id', auth, async (req, res) => {
+  if (req.user.role !== 'admin' && req.user.role !== 'faculty') {
+    return res.status(403).json({ 
+      error: 'Access Denied: Only faculty and administrators can modify class sessions.',
+      userRole: req.user.role 
+    });
+  }
+
   try {
     const updated = await Class.findByIdAndUpdate(
       req.params.id,
       { $set: req.body },
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     ).populate('subjectId facultyId');
     if (!updated) return res.status(404).json({ error: 'Class session not found' });
     res.json(updated);
@@ -65,8 +86,15 @@ router.put('/:id', auth, async (req, res) => {
   }
 });
 
-// DELETE
+// DELETE - Restricted to Faculty and Admin only
 router.delete('/:id', auth, async (req, res) => {
+  if (req.user.role !== 'admin' && req.user.role !== 'faculty') {
+    return res.status(403).json({ 
+      error: 'Access Denied: Only faculty and administrators can delete class sessions.',
+      userRole: req.user.role 
+    });
+  }
+
   try {
     const deleted = await Class.findByIdAndDelete(req.params.id);
     if (!deleted) return res.status(404).json({ error: 'Class session not found' });

@@ -51,6 +51,16 @@ async function runTests() {
     facultyToken = res.data.token;
   });
 
+  await test('POST /api/auth/login - Student Login (Read-Only Role)', async () => {
+    const res = await axios.post(`${BASE_URL}/auth/login`, {
+      email: 'student@example.com',
+      password: 'password123'
+    });
+    if (!res.data.token) throw new Error('No token returned');
+    if (res.data.user.role !== 'student') throw new Error('Role is not student');
+    studentToken = res.data.token;
+  });
+
   await test('POST /api/auth/login - Invalid Credentials Rejection', async () => {
     try {
       await axios.post(`${BASE_URL}/auth/login`, {
@@ -186,6 +196,24 @@ async function runTests() {
     if (res.data.status !== 'Absent') throw new Error('Status not updated to Absent');
   });
 
+  await test('RBAC Security: Student Forbidden from Marking Attendance (HTTP 403)', async () => {
+    try {
+      await axios.post(`${BASE_URL}/attendance`, [
+        {
+          studentId: testStudentId,
+          subjectId: testSubjectId,
+          date: new Date().toISOString().split('T')[0],
+          status: 'Present',
+          classId: testClassId
+        }
+      ], { headers: { 'x-auth-token': studentToken } });
+      throw new Error('Student should NOT be able to mark attendance!');
+    } catch (err) {
+      if (err.response?.status !== 403) throw err;
+      console.log('    [VERIFIED RBAC] Student write rejected with HTTP 403 Forbidden');
+    }
+  });
+
   // 7. ALL 6 RUBRIC AGGREGATION PIPELINES
   console.log('\n--- 7. ADVANCED MONGODB AGGREGATION PIPELINES ---');
   await test('Aggregation 1: GET /api/analytics/summary', async () => {
@@ -229,6 +257,64 @@ async function runTests() {
     const res = await axios.get(`${BASE_URL}/analytics/section-stats`, { headers });
     if (!Array.isArray(res.data) || res.data.length === 0) throw new Error('Section stats empty');
     console.log(`    Aggregated sections: ${res.data.map(s => `Sec ${s.section}: ${s.percentage}%`).join(', ')}`);
+  });
+
+  // 7.5. MULTI-TENANT ROLE DATA ISOLATION TESTS
+  console.log('\n--- 7.5. MULTI-TENANT ROLE DATA ISOLATION (RBAC SCOPING) ---');
+  await test('Student Data Isolation: GET /api/attendance returns ONLY own records', async () => {
+    const res = await axios.get(`${BASE_URL}/attendance`, {
+      headers: { 'x-auth-token': studentToken }
+    });
+    if (!Array.isArray(res.data) || res.data.length === 0) throw new Error('No attendance returned for student');
+    const foreignLeak = res.data.some(r => r.studentId?.regNo && r.studentId.regNo !== '24BCE0404');
+    if (foreignLeak) throw new Error('DATA LEAK: Student received attendance of another student!');
+    console.log(`    [VERIFIED] Student accessed ${res.data.length} personal records; zero foreign student records leaked`);
+  });
+
+  await test('Student Directory Isolation: GET /api/students returns ONLY own profile', async () => {
+    const res = await axios.get(`${BASE_URL}/students`, {
+      headers: { 'x-auth-token': studentToken }
+    });
+    if (!Array.isArray(res.data)) throw new Error('Invalid response');
+    if (res.data.length !== 1 || res.data[0].regNo !== '24BCE0404') {
+      throw new Error(`Expected exactly 1 student record for 24BCE0404, got ${res.data.length}`);
+    }
+    console.log(`    [VERIFIED] Student directory strictly restricted to self (24BCE0404)`);
+  });
+
+  await test('Faculty Course Scoping: GET /api/subjects returns ONLY assigned courses', async () => {
+    const res = await axios.get(`${BASE_URL}/subjects`, {
+      headers: { 'x-auth-token': facultyToken }
+    });
+    if (!Array.isArray(res.data) || res.data.length === 0) throw new Error('No subjects for faculty');
+    const unauthorizedCourse = res.data.some(s => s.facultyId?.email && s.facultyId.email !== 'faculty@example.com');
+    if (unauthorizedCourse) throw new Error('Faculty received courses taught by another faculty!');
+    console.log(`    [VERIFIED] Faculty only accessed their assigned course(s): ${res.data.map(s => s.subjectCode).join(', ')}`);
+  });
+
+  await test('Admin Global Access: Admin retrieves unconstrained institutional data', async () => {
+    const [studentsRes, subjectsRes] = await Promise.all([
+      axios.get(`${BASE_URL}/students`, { headers }),
+      axios.get(`${BASE_URL}/subjects`, { headers })
+    ]);
+    if (studentsRes.data.length < 50) throw new Error('Admin did not receive full cohort');
+    if (subjectsRes.data.length < 5) throw new Error('Admin did not receive all courses');
+    console.log(`    [VERIFIED] Admin accessed global state: ${studentsRes.data.length} students & ${subjectsRes.data.length} courses`);
+  });
+
+  await test('Student Analytics Lockout: GET /api/analytics/monthly-report rejected with HTTP 403', async () => {
+    try {
+      await axios.get(`${BASE_URL}/analytics/monthly-report`, {
+        headers: { 'x-auth-token': studentToken }
+      });
+      throw new Error('SECURITY BREACH: Student was able to access institutional monthly reports!');
+    } catch (err) {
+      if (err.response && err.response.status === 403) {
+        console.log('    [VERIFIED RBAC] Student access to institutional analytics rejected with HTTP 403 Forbidden');
+        return;
+      }
+      throw err;
+    }
   });
 
   // 8. CLEANUP TEST DATA (DELETE CRUD)

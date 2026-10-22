@@ -14,16 +14,19 @@ The **Student Attendance Management System** is a full-stack NoSQL web applicati
 ---
 
 ## 📊 Deliverables Included
-1. **PowerPoint Presentation (`.pptx`)**:
-   - Location: `c:\DBS\Student_Attendance_Management_System_BCSE302P.pptx`
+1. **Academic Project Report (`.pdf` & `.md`)**:
+   - Location: `Database_Project_Report.pdf` (Submission-ready 15-page academic lab report)
+   - Location: `Database_Project_Report.md` (Full GitHub-rendered report conforming to the lab submission syllabus)
+2. **PowerPoint Presentation (`.pptx`)**:
+   - Location: `Student_Attendance_Management_System_BCSE302P.pptx`
    - 18 professional 16:9 widescreen slides covering all rubric sections, architecture, data modeling, indexing, aggregation code, and viva questions.
-2. **Interactive Web Presentation (`presentation.html`)**:
-   - Location: `c:\DBS\presentation.html`
-   - Browser-based presentation with dark-mode aesthetic, keyboard navigation (Arrow keys / Spacebar), and fullscreen presentation mode.
-3. **End-to-End Test Suite (`test_api.js`)**:
-   - Location: `c:\DBS\test_api.js`
+3. **Comprehensive User Manual (`USER_MANUAL.md`)**:
+   - Location: `USER_MANUAL.md`
+   - Detailed guide covering system setup, evaluation walkthrough, and role-based permissions.
+4. **End-to-End Test Suite (`test_api.js`)**:
+   - Location: `test_api.js`
    - Automated testing suite verifying 28 unit and integration tests (28 passed, 0 failed).
-4. **Production-Ready Web Application**:
+5. **Production-Ready Web Application**:
    - `backend/`: Express.js API, JWT auth, Mongoose schemas, compound indexes, 7 aggregation pipelines.
    - `frontend/`: React 19 SPA, Tailwind CSS, Recharts analytics, Defaulter tracker (<75%), and aggregation code inspector.
 
